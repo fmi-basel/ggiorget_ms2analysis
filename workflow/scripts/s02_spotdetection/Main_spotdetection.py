@@ -1,14 +1,11 @@
 """
-Spot detection and linking for MS2 Image Analysis Pipeline
+Spot detection for MS2 Image Analysis Pipeline
 ====================
-This script takes 2D-time course (xyt) of MS2 labeled images, detects spots, linkes them over time and reads out ths
-spot intensity over time.
+This script takes 2D-time course (xyt) of MS2 labeled images and detects spots
 The general workflow includes:
-1. data loading, pre-processing (flat-field correction, background subtraction)
+1. data loading, pre-processing (background subtraction)
 2. spot detection and assignment to cells using the label mask
-3. linking spots, which includes clean up of double spots per cell, gap closing between detected spots and read out of
-   non-bursting cell intensity
-4. read-out of spot intensities and GFP intensity
+3. spot filtering based on spot size, intensity and cell co-localisation
 
 author: Jana Tuennermann
 """
@@ -82,7 +79,8 @@ def main(image_path, segmentation_path, path_output, spotdiameter, threshold):
     # tp.subpx_bias(df_spots)
     # plt.show()
 
-    # Clean up for spurious spots
+    # 3. ------- Spot filtering--------
+    # Clean up for spurious spots not assigned to cells
     # Assign spots to cells (Label image ID)
     t = df_spots['frame'].astype(np.int64)
     y = df_spots['y'].astype(np.int64)
@@ -148,6 +146,7 @@ if __name__ == "__main__":
         "--spot_diameter",
         type=int,
         default=9,
+        required=True,
         help="Estimated spot diameter for detection",
     )
     parser.add_argument(
@@ -155,6 +154,7 @@ if __name__ == "__main__":
         "--spot_threshold",
         type=int,
         default=4600,
+        required=True,
         help="Threshold for detection",
     )
     args = parser.parse_args()
