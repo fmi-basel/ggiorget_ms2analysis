@@ -1,4 +1,143 @@
-# Main entrypoint of the workflow. 
-# Please follow the best practices: 
-# https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
-# in particular regarding the standardized folder structure mentioned there. 
+import os
+
+import pandas as pd
+
+configfile: "config/config_halfenh.yml"
+
+# file containing the list of movies to process
+dataset_list = config['movies_list']
+
+# name of the dataset
+dataset_name = dataset_list.replace("_dataset_list.csv","")
+
+# all python scripts used
+segmentation_script = 'workflow/scripts/s01_segmentation/Main_maskbuilding.py'
+spotdetection_script = 'workflow/scripts/s02_spotdetection/Main_spotdetection.py'
+linking_script = 'workflow/scripts/s03_tracking/Main_linking.py'
+intensity_readout_script = 'workflow/scripts/s04_intensityreadout/Main_readout.py'
+postprocessing_script = 'workflow/scripts/s05_prostprocessing/Main_postprocessing.py'
+
+# Read list of movie, list number of movie files obtained
+try:
+    f = pd.read_csv(os.path.join('data',dataset_list))
+    movies = f.movie.tolist()
+    MoviesFiles = [os.path.basename(movie).replace("_MAX.tiff","") for movie in movies]
+    Dates = movies[0].split(os.path.sep,1)[0]
+    print(f"total # movies in dataset: {len(MoviesFiles)}")
+except FileNotFoundError:
+    print("# Sample file does not exist")
+
+
+rule all:
+    input:
+        expand('data/processed/{date}/postprocessed/{movie}_tracks_postprocessed.csv',date=Dates,movie=MoviesFiles),
+        'data/306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_30s_Halfenhancer_combined.csv'
+
+
+rule cell_segmentation:
+    input:
+        moviefile='data/processed/{date}/proj/{movie}_MAX.tiff',
+        script={segmentation_script}
+    output:
+        segmentationfile='data/processed/{date}/segmentation/{movie}_label-image.tiff',
+        segmentationtracks='data/processed/{date}/segmentation/{movie}_label-image_tracks.csv'
+    params:
+        outputfolder=lambda wildcards, output: os.path.dirname(output['segmentationfile']),
+        min_tracklength=config['min_tracklength_segmentation'],
+        min_cellsize=config['min_cellsize_segmentation']
+    log: 'logs/segmentation/{date}/{movie}'
+    conda: 'envs/stardist.yml'
+    shell:
+        '''
+        python {input.script} -i {input.moviefile} -o {params.outputfolder} -t {params.min_tracklength} -c {params.min_cellsize} 2> {log}
+        '''
+
+rule spotdetection:
+    input:
+        moviefile='data/processed/{date}/proj/{movie}_MAX.tiff',
+        segmentationimage='data/processed/{date}/segmentation/{movie}_label-image.tiff',
+        script={spotdetection_script}
+    output:
+        spots='data/processed/{date}/spots/{movie}_spots.csv'
+    params:
+        outputfolder=lambda wildcards, output: os.path.dirname(output['spots']),
+        spotdiameter=config['spotdiameter'],
+        threshold=config['spotdetection_threshold']
+    log: 'logs/spotdetection/{date}/{movie}'
+    conda: 'envs/ms2pipeline.yml'
+    shell:
+        '''
+        python {input.script} -i {input.moviefile} -is {input.segmentationimage} -o {params.outputfolder} -d {params.spotdiameter} -t {params.threshold} 2> {log}
+        '''
+
+rule linking:
+    input:
+        spots='data/processed/{date}/spots/{movie}_spots.csv',
+        segmentationpath='data/processed/{date}/segmentation/',
+        script={linking_script}
+    output:
+        linked_tracks='data/processed/{date}/tracks/{movie}_tracks.csv'
+    params:
+        outputfolder=lambda wildcards, output: os.path.dirname(output['linked_tracks'])
+    log: 'logs/linking/{date}/{movie}'
+    conda: 'envs/ms2pipeline.yml'
+    shell:
+        '''
+        python {input.script} -s {input.spots} -is {input.segmentationpath} -o {params.outputfolder} 2> {log}
+        '''
+
+rule intensity_readout:
+    input:
+        moviefile='data/processed/{date}/proj/{movie}_MAX.tiff',
+        linked_tracks='data/processed/{date}/tracks/{movie}_tracks.csv',
+        segmentationimage='data/processed/{date}/segmentation/{movie}_label-image.tiff',
+        flatfield='data/processed/Flatfield/{date}',
+        script={intensity_readout_script}
+    output:
+        intensity_tracks=temp('data/processed/{date}/postprocessed/{movie}_tracks_intensity.csv')
+    params:
+        gfpfile=lambda wildcards, input: input[
+            'moviefile'].replace("-mCherry-GFPCy5WithSMB","-GFP-Cy5mCherryWithSMB").replace('MAX','MEAN'),
+        outputfolder=lambda wildcards, output: os.path.dirname(output['intensity_tracks']),
+        spotdiameter=config['spotdiameter']
+    log: 'logs/intensity_readout/{date}/{movie}'
+    conda: 'envs/ms2pipeline.yml'
+    shell:
+        '''
+        python {input.script} -i {input.moviefile} -it {input.linked_tracks} -is {input.segmentationimage} -ig {params.gfpfile} -if {input.flatfield} -o {params.outputfolder} -d {params.spotdiameter} 2> {log}
+        '''
+
+rule postprocess_tracks:
+    input:
+        intensity_tracks='data/processed/{date}/postprocessed/{movie}_tracks_intensity.csv',
+        script={postprocessing_script}
+    output:
+        postprocessed_tracks='data/processed/{date}/postprocessed/{movie}_tracks_postprocessed.csv'
+    params:
+        outputfolder=lambda wildcards, output: os.path.dirname(output['postprocessed_tracks']),
+        min_tracklength=config['min_burstlength']
+    log: 'logs/postprocess_tracks/{date}/{movie}'
+    conda: 'envs/ms2pipeline.yml'
+    shell:
+        '''
+        python {input.script} -it {input.intensity_tracks} -mb {params.min_tracklength} -o {params.outputfolder}  2> {log}
+        '''
+
+rule aggregate_tracks:
+    input:
+        expand('data/processed/{date}/postprocessed/{movie}_tracks_postprocessed.csv',date=Dates,movie=MoviesFiles)
+    output:
+        temp('data/306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_30s_{dataset_name}_combined_temp.csv')
+    shell:
+        '''
+        head -n 1 {input[0]} > {output}
+        tail -n +2 -q {input} >> {output}
+        '''
+
+rule add_uniqueid:
+    input: 'data/306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_30s_{dataset_name}_combined_temp.csv'
+    output: 'data/306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_30s_{dataset_name}_combined.csv'
+    run:
+        df = pd.read_csv(input[0])
+        df['unique_id'] = df.groupby(['filename', 'track_id']).ngroup()
+        df.to_csv(output[0], index=False)

@@ -22,8 +22,8 @@ from skimage.segmentation import clear_border
 from skimage.transform import resize
 from stardist.models import StarDist2D
 
-from workflow.scripts.s02_spotdetection.global_cell_readout import wholecell_readout_timeseries
-from workflow.scripts.utils import flatfieldcorrection
+from workflow.scripts.s04_intensityreadout.global_cell_readout import wholecell_readout_timeseries
+from workflow.scripts.s04_intensityreadout.Main_readout import flatfieldcorrection
 
 # 1. ------- Load images --------
 path = '/Volumes/ggiorget_scratch/Jana/Microscopy/Mobilisation-E10/Raw/20230724_E14_GFP'

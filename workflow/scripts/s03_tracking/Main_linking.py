@@ -51,7 +51,7 @@ def main(spots_path, segmentation_path, path_output):
     # Let's start by getting rid of more spurious spots: If more than one spot per frame per cell,
     # only keep the brightest spot
     df_spots = df_spots.groupby(['track_id', 'frame']).apply(lambda df: df.loc[df.mass.idxmax()],
-                                                             include_groups=True).reset_index(drop=True)
+                                                             include_groups=False).reset_index()
 
     # Now, let's interpolate the position of the gene:
     # Here, semi-empty df with spot data and NaN for frames without spots, in here I write all the info I generate

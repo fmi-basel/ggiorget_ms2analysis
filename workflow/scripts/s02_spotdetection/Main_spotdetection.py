@@ -36,7 +36,7 @@ def local_backgroundsubtraction(image, pixelsize):
     return image
 
 
-def main(image_path, segmentation_path, path_output, spotdiameter, threshold):
+def main(image_path, mask_image_path, path_output, spotdiameter, threshold):
     tp.quiet()
     # Get the name for the movie (for naming convention later)
     images_filename = os.path.split(image_path)[1]
@@ -53,8 +53,7 @@ def main(image_path, segmentation_path, path_output, spotdiameter, threshold):
 
     # 1. ------- Data loading and Pre-processing--------
     images_maxproj = io.imread(image_path)
-    mask_labelimagename = images_filename.replace('_MAX.tiff', '_label-image.tiff')
-    mask_image = io.imread(os.path.join(segmentation_path, mask_labelimagename))
+    mask_image = io.imread(mask_image_path)
 
     # local background subtraction of images, works better for spot detection later
     images_sub = np.stack(
@@ -127,11 +126,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-is",
-        "--input_segmentation",
+        "--input_segmentation_image",
         type=str,
         default=None,
         required=True,
-        help="Directory in which segmentation images are saved, requires absolute path",
+        help="Segmentation images to be used, requires absolute path",
     )
     parser.add_argument(
         "-o",
@@ -159,5 +158,5 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(image_path=args.input, segmentation_path=args.input_segmentation, path_output=args.path_output,
+    main(image_path=args.input, mask_image_path=args.input_segmentation_image, path_output=args.path_output,
          spotdiameter=args.spot_diameter, threshold=args.spot_threshold)
