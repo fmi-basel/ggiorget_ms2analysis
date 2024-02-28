@@ -19,10 +19,10 @@ postprocessing_script = 'workflow/scripts/s05_prostprocessing/Main_postprocessin
 
 # Read list of movie, list number of movie files obtained
 try:
-    f = pd.read_csv(os.path.join('data',dataset_list))
+    f = pd.read_table(os.path.join('data/helperlists',dataset_list), header=None, names=['movie'])
     movies = f.movie.tolist()
     MoviesFiles = [os.path.basename(movie).replace("_MAX.tiff","") for movie in movies]
-    Dates = movies[0].split(os.path.sep,1)[0]
+    Dates = [movie.split(os.path.sep,-1)[-3] for movie in movies]
     print(f"total # movies in dataset: {len(MoviesFiles)}")
 except FileNotFoundError:
     print("# Sample file does not exist")

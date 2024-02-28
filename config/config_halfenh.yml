@@ -1,4 +1,4 @@
-movies_list: 'HalfEnhancer_dataset_list.csv'
+movies_list: 'HalfEnhancer_dataset_list.txt'
 
 min_tracklength_segmentation: 60
 min_cellsize_segmentation: 2000

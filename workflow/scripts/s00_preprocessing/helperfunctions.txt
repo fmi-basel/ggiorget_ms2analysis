@@ -1,0 +1,25 @@
+---- create projections ----
+I use the projection python files in combination with gnu parallel. Gnu can take a list of files as input, whereas I use
+two lists where items are linked (input raw images to be projected and output folder list. To create an initial list I
+use the command line and replace names using the script helper_lists. Here a detailed walkthrough:
+
+1. create a list of raw images to be projected. It looked into the folder currently at and all sub-folders:
+```bash
+find "$(pwd)" -iname "*FullseqTIRF-mCherry*.nd" > ndfiles_ms2.txt
+
+1b.
+If you would like to change anything manually here, do it now. E.g. if you would like to remove files.
+
+2. create a list of GFP files (will have the same order as ms2 files):
+```bash
+cat ndfiles_ms2.txt | sed 's/-mCherry-GFPCy5WithSMB/-GFP-Cy5mCherryWithSMB/g; s/_halfenh_30s/_halfenh_30s\/GFP/g' > ndfiles_gfp.txt
+
+3. create a list of output folders. This is done by replacing the input folder with the output folder:
+```bash
+cat ndfiles_ms2.txt | sed 's/raw_data/processed/g; s/_halfenh_30s//g; s|\(.*\)/.*|\1|' > target_folder.txt
+
+4. Now start the projection files using gnu parallel:
+```bash
+nice parallel -d "\r\n" --link python max-proj_nd-as-tiff.py -i {1} -o {2} :::: /.../ndfiles_ms2.txt :::: /.../target_folder.txt
+
+nice parallel -d "\r\n" --link python mean-proj_nd-as-tiff.py -i {1} -o {2} :::: /.../ndfiles_gfp.txt :::: /.../target_folder.txt
