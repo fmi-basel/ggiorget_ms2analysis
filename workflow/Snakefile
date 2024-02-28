@@ -2,13 +2,13 @@ import os
 
 import pandas as pd
 
-configfile: "config/config_halfenh.yml"
+configfile: "config/config_fiveclones.yml"
 
 # file containing the list of movies to process
 dataset_list = config['movies_list']
 
 # name of the dataset
-dataset_name = dataset_list.replace("_dataset_list.csv","")
+dataset_name = dataset_list.replace("_dataset_list.txt","")
 
 # all python scripts used
 segmentation_script = 'workflow/scripts/s01_segmentation/Main_maskbuilding.py'
@@ -19,7 +19,7 @@ postprocessing_script = 'workflow/scripts/s05_prostprocessing/Main_postprocessin
 
 # Read list of movie, list number of movie files obtained
 try:
-    f = pd.read_table(os.path.join('data/helperlists',dataset_list), header=None, names=['movie'])
+    f = pd.read_table(os.path.join('data/helperlists',dataset_list),header=None,names=['movie'])
     movies = f.movie.tolist()
     MoviesFiles = [os.path.basename(movie).replace("_MAX.tiff","") for movie in movies]
     Dates = [movie.split(os.path.sep,-1)[-3] for movie in movies]
@@ -30,8 +30,8 @@ except FileNotFoundError:
 
 rule all:
     input:
-        expand('data/processed/{date}/postprocessed/{movie}_tracks_postprocessed.csv',date=Dates,movie=MoviesFiles),
-        'data/306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_30s_Halfenhancer_combined.csv'
+        expand('data/processed/{date}/postprocessed/{movie}_tracks_postprocessed.csv',zip, date=Dates,movie=MoviesFiles),
+        expand('data/306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_30s_{dataset_name}_combined.csv', dataset_name=dataset_name)
 
 
 rule cell_segmentation:
@@ -73,17 +73,19 @@ rule spotdetection:
 rule linking:
     input:
         spots='data/processed/{date}/spots/{movie}_spots.csv',
-        segmentationpath='data/processed/{date}/segmentation/',
+        segmentationfile='data/processed/{date}/segmentation/{movie}_label-image.tiff',
+        segmentationtracks='data/processed/{date}/segmentation/{movie}_label-image_tracks.csv',
         script={linking_script}
     output:
         linked_tracks='data/processed/{date}/tracks/{movie}_tracks.csv'
     params:
+        segmentationpath=lambda wildcards, input: os.path.dirname(input['segmentationfile']),
         outputfolder=lambda wildcards, output: os.path.dirname(output['linked_tracks'])
     log: 'logs/linking/{date}/{movie}'
     conda: 'envs/ms2pipeline.yml'
     shell:
         '''
-        python {input.script} -s {input.spots} -is {input.segmentationpath} -o {params.outputfolder} 2> {log}
+        python {input.script} -s {input.spots} -is {params.segmentationpath} -o {params.outputfolder} 2> {log}
         '''
 
 rule intensity_readout:
@@ -125,7 +127,7 @@ rule postprocess_tracks:
 
 rule aggregate_tracks:
     input:
-        expand('data/processed/{date}/postprocessed/{movie}_tracks_postprocessed.csv',date=Dates,movie=MoviesFiles)
+        expand('data/processed/{date}/postprocessed/{movie}_tracks_postprocessed.csv', zip, date=Dates,movie=MoviesFiles)
     output:
         temp('data/306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_30s_{dataset_name}_combined_temp.csv')
     shell:
@@ -140,4 +142,4 @@ rule add_uniqueid:
     run:
         df = pd.read_csv(input[0])
         df['unique_id'] = df.groupby(['filename', 'track_id']).ngroup()
-        df.to_csv(output[0], index=False)
+        df.to_csv(output[0],index=False)

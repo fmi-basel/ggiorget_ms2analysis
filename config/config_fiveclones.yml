@@ -1,0 +1,9 @@
+movies_list: 'fiveclone_dataset_list.txt'
+
+min_tracklength_segmentation: 60
+min_cellsize_segmentation: 2000
+
+spotdiameter: 9
+spotdetection_threshold: 4600
+
+min_burstlength: 2

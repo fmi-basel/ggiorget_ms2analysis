@@ -16,10 +16,16 @@ cat ndfiles_ms2.txt | sed 's/-mCherry-GFPCy5WithSMB/-GFP-Cy5mCherryWithSMB/g; s/
 
 3. create a list of output folders. This is done by replacing the input folder with the output folder:
 ```bash
-cat ndfiles_ms2.txt | sed 's/raw_data/processed/g; s/_halfenh_30s//g; s|\(.*\)/.*|\1|' > target_folder.txt
+cat ndfiles_ms2.txt | sed 's/raw_data/processed/g; s/_halfenh_30s//g; s|\(.*\)/.*|\1|; s|$|/proj|' > target_folder.txt
 
 4. Now start the projection files using gnu parallel:
 ```bash
-nice parallel -d "\r\n" --link python max-proj_nd-as-tiff.py -i {1} -o {2} :::: /.../ndfiles_ms2.txt :::: /.../target_folder.txt
+nice parallel --link python max-proj_nd-as-tiff.py -i {1} -o {2} :::: /.../ndfiles_ms2.txt :::: /.../target_folder.txt
 
-nice parallel -d "\r\n" --link python mean-proj_nd-as-tiff.py -i {1} -o {2} :::: /.../ndfiles_gfp.txt :::: /.../target_folder.txt
+nice parallel --link python mean-proj_nd-as-tiff.py -i {1} -o {2} :::: /.../ndfiles_gfp.txt :::: /.../target_folder.txt
+
+
+---- create symlink to data ----
+ln -s /.../todata ./where the symlink should be
+unlink ./where the symlink should be
+```

@@ -9,6 +9,7 @@ author: Jana Tuennermann
 
 # import packages
 import argparse
+import os
 from glob import glob
 from os.path import join, basename, dirname
 
@@ -17,6 +18,11 @@ from skimage import io
 
 
 def main(path_ndimage, path_output):
+    # Check whether the output path for plots already exists, if not create it
+    if not os.path.exists(path_output):
+        # Create a new directory because it does not exist
+        os.makedirs(path_output)
+
     # list all files with given basename and *.stk into a dataframe
     path = path_ndimage.replace('.nd', '')
     files = glob(join(dirname(path), '*' + basename(path) + '*' + '.stk'))
