@@ -41,14 +41,19 @@ def main(tracks_path, min_burstlength, path_output):
     images_filename = filename.replace('_tracks_intensity.csv', '_MAX.tiff')
     # 2. ------- remove single pos --------
     # remove single pos values from spot detection column
-    df_tracks['spotdetected_filtered'] = df_tracks.groupby('track_id').apply(
-        lambda cell: remove_positives(cell.spotdetected, area_size=min_burstlength), include_groups=False).reset_index(
-        level=0, drop=True)
+    df_tracks['spotdetected_filtered'] = float('nan')
+    if not df_tracks.empty:
+        df_tracks['spotdetected_filtered'] = df_tracks.groupby('track_id').apply(
+            lambda cell: remove_positives(cell.spotdetected, area_size=min_burstlength),
+            include_groups=False).reset_index(
+            level=0, drop=True)
 
     # 3. ------- Saving data --------
     # also add some useful naming columns
     df_tracks['filename'] = images_filename
-    df_tracks['clone'] = df_tracks['filename'].str.rsplit(pat='_', n=-1, expand=True)[3]
+    df_tracks['clone'] = float('nan')
+    if not df_tracks.empty:
+        df_tracks['clone'] = df_tracks['filename'].str.rsplit(pat='_', n=-1, expand=True)[3]
     df_tracks.to_csv(os.path.join(path_output, filename.replace('_intensity.csv', '_postprocessed.csv')), index=False)
 
 

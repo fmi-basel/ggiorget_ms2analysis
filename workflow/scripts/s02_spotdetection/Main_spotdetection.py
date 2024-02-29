@@ -46,11 +46,6 @@ def main(image_path, mask_image_path, path_output, spotdiameter, threshold):
         # Create a new directory because it does not exist
         os.makedirs(path_output)
 
-    # Make a sub-folder for some quality assessment plots
-    if not os.path.exists(os.path.join(path_output, 'plots')):
-        # Create a new directory because it does not exist
-        os.makedirs(os.path.join(path_output, 'plots'))
-
     # 1. ------- Data loading and Pre-processing--------
     images_maxproj = io.imread(image_path)
     mask_image = io.imread(mask_image_path)
@@ -93,16 +88,23 @@ def main(image_path, mask_image_path, path_output, spotdiameter, threshold):
     # in the output folder
     threshold_size = 1.29  # default 1.19 for JF646, 1.29 for JF549
     threshold_mass = 30000  # default 21000 for JF646, 30000 for JF549
-    # Create the plot and save it
-    plt.scatter(df_spots['mass'], df_spots['size'])
-    plt.hlines(y=threshold_size, xmin=min(df_spots['mass']), xmax=max(df_spots['mass']), colors='r', linestyles='--')
-    plt.vlines(x=threshold_mass, ymin=min(df_spots['size']), ymax=max(df_spots['size']), colors='r', linestyles='--')
-    plt.ylabel('Size')
-    plt.xlabel('Mass')
-    plt.title(images_filename, fontsize=5)
-    plt.savefig(os.path.join(path_output, 'plots', images_filename.replace('_MAX.tiff', '_Spot-Filter.pdf')))
-    # plt.show()
-    plt.close('all')
+
+    # If spots are detected, create a plot to visualize the thresholds
+    try:
+        # Create the plot and save it
+        plt.scatter(df_spots['mass'], df_spots['size'])
+        plt.hlines(y=threshold_size, xmin=min(df_spots['mass']), xmax=max(df_spots['mass']), colors='r',
+                   linestyles='--')
+        plt.vlines(x=threshold_mass, ymin=min(df_spots['size']), ymax=max(df_spots['size']), colors='r',
+                   linestyles='--')
+        plt.ylabel('Size')
+        plt.xlabel('Mass')
+        plt.title(images_filename, fontsize=5)
+        plt.savefig(os.path.join(path_output, images_filename.replace('_MAX.tiff', '_Spot-Filter.pdf')))
+        # plt.show()
+        plt.close('all')
+    except ValueError:
+        print('No spots detected, skipping plot')
 
     # Remove the camera error spots by thresholding
     df_spots = df_spots[df_spots['mass'] <= threshold_mass]

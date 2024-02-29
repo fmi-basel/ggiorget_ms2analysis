@@ -124,12 +124,19 @@ def main(image_path, tracks_path, mask_image_path, gfp_image_path, flatfield_pat
     # 4. ------- Bleach correction --------
     # based on the intensity of the whole cell, correct spot and local background intensity for bleaching. Then
     # calculate the corrected trace intensity (spot-local background)
-    df_tracks['mean_spot_bleach'] = df_tracks.groupby('track_id').apply(
-        lambda cell: bleach_correction(cell.mean_spot, cell.mean_completecell), include_groups=False).reset_index(
-        level=0, drop=True)
-    df_tracks['mean_localbackground_bleach'] = df_tracks.groupby('track_id').apply(
-        lambda cell: bleach_correction(cell.mean_localbackground, cell.mean_completecell),
-        include_groups=False).reset_index(level=0, drop=True)
+
+    # initialize bleach column, in order to handle empty dfs
+    df_tracks['mean_spot_bleach'] = float('nan')
+    df_tracks['mean_localbackground_bleach'] = float('nan')
+    # bleach correction
+    if not df_tracks.empty:
+        df_tracks['mean_spot_bleach'] = df_tracks.groupby('track_id').apply(
+            lambda cell: bleach_correction(cell.mean_spot, cell.mean_completecell), include_groups=False).reset_index(
+            level=0, drop=True)
+        df_tracks['mean_localbackground_bleach'] = df_tracks.groupby('track_id').apply(
+            lambda cell: bleach_correction(cell.mean_localbackground, cell.mean_completecell),
+            include_groups=False).reset_index(level=0, drop=True)
+    # calculate corrected trace intensity
     df_tracks['corr_trace'] = df_tracks['mean_spot_bleach'] - df_tracks['mean_localbackground_bleach']
 
     # 5. ------- GFP read-out --------
