@@ -41,6 +41,7 @@ rule cell_segmentation:
     output:
         segmentationfile='data/processed/{date}/segmentation/{movie}_label-image.tiff',
         segmentationtracks='data/processed/{date}/segmentation/{movie}_label-image_tracks.csv'
+    threads: workflow.cores * 0.5
     params:
         outputfolder=lambda wildcards, output: os.path.dirname(output['segmentationfile']),
         min_tracklength=config['min_tracklength_segmentation'],

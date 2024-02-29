@@ -16,17 +16,14 @@ author: Jana Tuennermann
 # import packages
 import argparse
 import os
-
 import numpy as np
 from skimage import io
 from skimage.morphology import remove_small_objects
 from skimage.segmentation import clear_border
-
 from mask_tracking_LAP import mask_tracking_lap
-from stardist_timeseries import stardist_timeseries
-
 # Run on CPU
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+from stardist_timeseries import stardist_timeseries
 
 
 def main(path_images, path_output, min_tracklength, min_cellsize):
