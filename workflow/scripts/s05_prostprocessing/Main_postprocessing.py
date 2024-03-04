@@ -12,7 +12,6 @@ author: Jana Tuennermann
 import argparse
 import os
 
-import numpy as np
 import pandas as pd
 from skimage.morphology import remove_small_holes
 
@@ -27,10 +26,9 @@ def remove_positives(data, area_size=2):
     Returns:
          data_array_filtered: (pd.Series) filtered data trace
     """
-    data_array = data.apply(lambda x: int(not x))
-    data_array = np.array(data_array.tolist())
+    data_array = data.apply(lambda x: not x)
     data_array_filtered = remove_small_holes(data_array, area_threshold=area_size)
-    data_array_filtered = data_array_filtered.astype(bool)
+    data_array_filtered = ~data_array_filtered.astype(bool)
     return data_array_filtered
 
 
