@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-configfile: "config/config_fiveclones.yml"
+configfile: "config/config_halfenh.yml"
 
 # file containing the list of movies to process
 dataset_list = config['movies_list']
@@ -30,8 +30,8 @@ except FileNotFoundError:
 
 rule all:
     input:
-        expand('data/processed/{date}/postprocessed/{movie}_tracks_postprocessed.csv',zip, date=Dates,movie=MoviesFiles),
-        expand('data/306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_30s_{dataset_name}_combined.csv', dataset_name=dataset_name)
+        expand('data/processed/{date}/postprocessed/{movie}_tracks_postprocessed.csv',zip,date=Dates,movie=MoviesFiles),
+        expand('data/306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_30s_{dataset_name}_combined.csv',dataset_name=dataset_name)
 
 
 rule cell_segmentation:
@@ -63,12 +63,14 @@ rule spotdetection:
     params:
         outputfolder=lambda wildcards, output: os.path.dirname(output['spots']),
         spotdiameter=config['spotdiameter'],
-        threshold=config['spotdetection_threshold']
+        threshold=config['spotdetection_threshold'],
+        threshold_spotsize=config['spotfilter_size'],
+        threshold_spotmass=config['spotfilter_mass']
     log: 'logs/spotdetection/{date}/{movie}'
     conda: 'envs/ms2pipeline.yml'
     shell:
         '''
-        python {input.script} -i {input.moviefile} -is {input.segmentationimage} -o {params.outputfolder} -d {params.spotdiameter} -t {params.threshold} 2> {log}
+        python {input.script} -i {input.moviefile} -is {input.segmentationimage} -o {params.outputfolder} -d {params.spotdiameter} -t {params.threshold} -sts {params.threshold_spotsize} -stm {params.threshold_spotmass} 2> {log}
         '''
 
 rule linking:
@@ -128,7 +130,7 @@ rule postprocess_tracks:
 
 rule aggregate_tracks:
     input:
-        expand('data/processed/{date}/postprocessed/{movie}_tracks_postprocessed.csv', zip, date=Dates,movie=MoviesFiles)
+        expand('data/processed/{date}/postprocessed/{movie}_tracks_postprocessed.csv',zip,date=Dates,movie=MoviesFiles)
     output:
         temp('data/306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_30s_{dataset_name}_combined_temp.csv')
     shell:
@@ -141,6 +143,6 @@ rule add_uniqueid:
     input: 'data/306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_30s_{dataset_name}_combined_temp.csv'
     output: 'data/306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_30s_{dataset_name}_combined.csv'
     run:
-        df = pd.read_csv(input[0])
+        df = pd.read_csv(input[0],dtype={'clone': 'str'})
         df['unique_id'] = df.groupby(['filename', 'track_id']).ngroup()
         df.to_csv(output[0],index=False)

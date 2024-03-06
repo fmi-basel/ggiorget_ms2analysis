@@ -36,7 +36,7 @@ def local_backgroundsubtraction(image, pixelsize):
     return image
 
 
-def main(image_path, mask_image_path, path_output, spotdiameter, threshold):
+def main(image_path, mask_image_path, path_output, spotdiameter, threshold, spot_threshold_size, spot_threshold_mass):
     tp.quiet()
     # Get the name for the movie (for naming convention later)
     images_filename = os.path.split(image_path)[1]
@@ -62,11 +62,6 @@ def main(image_path, mask_image_path, path_output, spotdiameter, threshold):
     # It is a threshold-based approach
 
     # Detection
-    # JF646 wash: diameter 7, minmass 1400 (Max_sub)
-    # JF646 no wash: diameter 7, minmass 2000 (Max_sub)
-    # JF549 wash: diameter 9, minmass 3900 (Max_sub)
-    # JF549 no wash: diameter 9, minmass 4300 (Max_sub)
-    # JF549 wash 5 clones: diameter 9, minmass 4600 (Max_sub)
     df_spots = tp.batch(images_sub, diameter=spotdiameter, minmass=threshold)
 
     # the subpx_bias is a function to see if the diameter you chose makes sense, the resulting histogram should be flat
@@ -86,16 +81,14 @@ def main(image_path, mask_image_path, path_output, spotdiameter, threshold):
     # I have some spots coming from camera issues, they can be small, but super intense, hence I use thresholding to
     # remove them. For quality control, I want to plot the spot properties I thresholded on and save them automatically
     # in the output folder
-    threshold_size = 1.29  # default 1.19 for JF646, 1.29 for JF549
-    threshold_mass = 30000  # default 21000 for JF646, 30000 for JF549
 
     # If spots are detected, create a plot to visualize the thresholds
     try:
         # Create the plot and save it
         plt.scatter(df_spots['mass'], df_spots['size'])
-        plt.hlines(y=threshold_size, xmin=min(df_spots['mass']), xmax=max(df_spots['mass']), colors='r',
+        plt.hlines(y=spot_threshold_size, xmin=min(df_spots['mass']), xmax=max(df_spots['mass']), colors='r',
                    linestyles='--')
-        plt.vlines(x=threshold_mass, ymin=min(df_spots['size']), ymax=max(df_spots['size']), colors='r',
+        plt.vlines(x=spot_threshold_mass, ymin=min(df_spots['size']), ymax=max(df_spots['size']), colors='r',
                    linestyles='--')
         plt.ylabel('Size')
         plt.xlabel('Mass')
@@ -107,8 +100,8 @@ def main(image_path, mask_image_path, path_output, spotdiameter, threshold):
         print('No spots detected, skipping plot')
 
     # Remove the camera error spots by thresholding
-    df_spots = df_spots[df_spots['mass'] <= threshold_mass]
-    df_spots = df_spots[df_spots['size'] >= threshold_size]
+    df_spots = df_spots[df_spots['mass'] <= spot_threshold_mass]
+    df_spots = df_spots[df_spots['size'] >= spot_threshold_size]
 
     # save spots
     df_spots.to_csv(os.path.join(path_output, images_filename.replace('_MAX.tiff', '_spots.csv')), index=False)
@@ -156,9 +149,26 @@ if __name__ == "__main__":
         type=int,
         default=4600,
         required=True,
-        help="Threshold for detection",
+        help="Threshold for spot detection",
+    )
+    parser.add_argument(
+        "-sts",
+        "--spot_threshold_size",
+        type=float,
+        default=1.29,
+        required=True,
+        help="For spot filtering, threshold on size",
+    )
+    parser.add_argument(
+        "-stm",
+        "--spot_threshold_mass",
+        type=int,
+        default=30000,
+        required=True,
+        help="For spot filtering, threshold on mass/intensity",
     )
     args = parser.parse_args()
 
     main(image_path=args.input, mask_image_path=args.input_segmentation_image, path_output=args.path_output,
-         spotdiameter=args.spot_diameter, threshold=args.spot_threshold)
+         spotdiameter=args.spot_diameter, threshold=args.spot_threshold, spot_threshold_size=args.spot_threshold_size,
+         spot_threshold_mass=args.spot_threshold_mass)
