@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 # Load data
-path = '/Volumes/ggiorget_scratch/Jana/Microscopy/Mobilisation-E10/groundtruth/'
+path = '/Volumes/ggiorget_scratch/Jana/transcrip_dynamic/E10_Mobi/live_imaging/benchmarking/data/sweep_old'
 # trackpy data
 filename_trackpy1 = '20230715_306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_5G7_1_FullseqTIRF-mCherry-GFPCy5WithSMB_s1_cutMAX_summary_spotdetec_trackpy_sub.csv'
 filename_trackpy2 = '20230719_306KI-ddCTCF-dpuro-MS2-HaloMCP-E10Mobi_JF549_5E10_1_FullseqTIRF-mCherry-GFPCy5WithSMB_s1_MAX_summary_spotdetec_trackpy_sub.csv'
@@ -51,7 +51,7 @@ df_hmax['F1score'] = 2 * df_hmax['TP'] / (2 * df_hmax['TP'] + df_hmax['FP'] + df
 
 # -- Trackpy Plotting --
 # For visualisation I look at rates independently dependent on the diameter in detection
-diameter = 9
+diameter = 7
 df_trackpy_dia = df_trackpy[df_trackpy['diameter'] == diameter]
 projection = np.unique(df_trackpy_dia['images']).tolist()
 

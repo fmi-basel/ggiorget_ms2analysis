@@ -18,7 +18,9 @@ import pandas as pd
 import trackpy as tp
 from skimage import io
 
-from utils import local_backgroundsubtraction, flatfieldcorrection, hmax_detection
+from workflow.scripts.s02_spotdetection.Main_spotdetection import local_backgroundsubtraction
+from workflow.scripts.s04_intensityreadout.Main_readout import flatfieldcorrection
+from workflow.scratchpad.utils import hmax_detection
 
 tp.quiet()
 
