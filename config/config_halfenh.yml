@@ -1,9 +1,11 @@
 movies_list: 'HalfEnhancer_dataset_list.txt'
 
-min_tracklength_segmentation: 60
-min_cellsize_segmentation: 2000
+min_tracklength_segmentation: 10
+min_cellsize_segmentation: 3000
 
-spotdiameter: 9
+spotdiameter: 7
 spotdetection_threshold: 4600
+spotfilter_size: 1.19
+spotfilter_mass: 30000
 
 min_burstlength: 2
