@@ -8,9 +8,9 @@ import seaborn as sns
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 # Load data
-path = '/Volumes/ggiorget_scratch/Jana/transcrip_dynamic/E10_Mobi/live_imaging/benchmarking/spotdetection_maxsub/comparison'
+path = '/Volumes/ggiorget_scratch/Jana/transcrip_dynamic/E10_Mobi/live_imaging/benchmarking/spotdetection/trackpy/comparison'
 # trackpy data
-filenames = glob(os.path.join(path, '*sweep.csv'))
+filenames = glob(os.path.join(path, '*-sweep.csv'))
 
 # Load data
 df = []
@@ -29,12 +29,13 @@ def calculate_scores(dataframe):
     return f1, recall, precision
 
 
-df_results = df.groupby(['spotdiameter', 'threshold']).apply(calculate_scores)
+df_results = df.groupby(['threshold', 'spotdiameter', 'spot_size_max', 'spot_size_min']).apply(calculate_scores)
 df_results = pd.DataFrame(df_results.tolist(), index=df_results.index,
                           columns=['f1', 'recall', 'precision']).reset_index()
 
 spotdiameter = df['spotdiameter'].unique()
 
+#df_results.to_csv(os.path.join(path, 'filtered_results.csv'), index=False)
 # Plot results
 # F1 score
 fig, axs = plt.subplots(len(spotdiameter), 1, figsize=(5, len(spotdiameter) * 3), sharey=True)
@@ -50,6 +51,7 @@ plt.tight_layout()
 plt.show()
 #plt.savefig(os.path.join(path.replace('comparison', 'plots'), 'f1.pdf'))
 plt.close()
+
 
 # Recall
 fig, axs = plt.subplots(len(spotdiameter), 1, figsize=(5, len(spotdiameter) * 3), sharey=True)
