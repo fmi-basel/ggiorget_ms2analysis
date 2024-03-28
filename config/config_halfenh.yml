@@ -5,7 +5,8 @@ min_cellsize_segmentation: 3000
 
 spotdiameter: 7
 spotdetection_threshold: 4600
-spotfilter_size: 1.19
+spotfilter_size_min: 1.2
+spotfilter_size_max: 1.65
 spotfilter_mass: 30000
 
 min_burstlength: 2

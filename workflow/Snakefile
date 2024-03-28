@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-configfile: "config/config_halfenh.yml"
+configfile: "config/config_fiveclones.yml"
 
 # file containing the list of movies to process
 dataset_list = config['movies_list']
@@ -64,13 +64,14 @@ rule spotdetection:
         outputfolder=lambda wildcards, output: os.path.dirname(output['spots']),
         spotdiameter=config['spotdiameter'],
         threshold=config['spotdetection_threshold'],
-        threshold_spotsize=config['spotfilter_size'],
+        threshold_spotsize_min=config['spotfilter_size_min'],
+        threshold_spotsize_max=config['spotfilter_size_max'],
         threshold_spotmass=config['spotfilter_mass']
     log: 'logs/spotdetection/{date}/{movie}'
     conda: 'envs/ms2pipeline.yml'
     shell:
         '''
-        python {input.script} -i {input.moviefile} -is {input.segmentationimage} -o {params.outputfolder} -d {params.spotdiameter} -t {params.threshold} -sts {params.threshold_spotsize} -stm {params.threshold_spotmass} 2> {log}
+        python {input.script} -i {input.moviefile} -is {input.segmentationimage} -o {params.outputfolder} -d {params.spotdiameter} -t {params.threshold} -stsmin {params.threshold_spotsize_min} -stsmax {params.threshold_spotsize_max} -stm {params.threshold_spotmass} 2> {log}
         '''
 
 rule linking:

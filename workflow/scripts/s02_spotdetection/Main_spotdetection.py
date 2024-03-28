@@ -36,7 +36,8 @@ def local_backgroundsubtraction(image, pixelsize):
     return image
 
 
-def main(image_path, mask_image_path, path_output, spotdiameter, threshold, spot_threshold_size, spot_threshold_mass):
+def main(image_path, mask_image_path, path_output, spotdiameter, threshold, spot_threshold_size_min,
+         spot_threshold_size_max, spot_threshold_mass):
     tp.quiet()
     # Get the name for the movie (for naming convention later)
     images_filename = os.path.split(image_path)[1]
@@ -86,7 +87,9 @@ def main(image_path, mask_image_path, path_output, spotdiameter, threshold, spot
     try:
         # Create the plot and save it
         plt.scatter(df_spots['mass'], df_spots['size'])
-        plt.hlines(y=spot_threshold_size, xmin=min(df_spots['mass']), xmax=max(df_spots['mass']), colors='r',
+        plt.hlines(y=spot_threshold_size_max, xmin=min(df_spots['mass']), xmax=max(df_spots['mass']), colors='r',
+                   linestyles='--')
+        plt.hlines(y=spot_threshold_size_min, xmin=min(df_spots['mass']), xmax=max(df_spots['mass']), colors='r',
                    linestyles='--')
         plt.vlines(x=spot_threshold_mass, ymin=min(df_spots['size']), ymax=max(df_spots['size']), colors='r',
                    linestyles='--')
@@ -100,8 +103,8 @@ def main(image_path, mask_image_path, path_output, spotdiameter, threshold, spot
         print('No spots detected, skipping plot')
 
     # Remove the camera error spots by thresholding
-    df_spots = df_spots[df_spots['mass'] <= spot_threshold_mass]
-    df_spots = df_spots[df_spots['size'] >= spot_threshold_size]
+    df_spots = df_spots[(df_spots['mass'] <= spot_threshold_mass) & (df_spots['size'] >= spot_threshold_size_min) & (
+            df_spots['size'] <= spot_threshold_size_max)]
 
     # save spots
     df_spots.to_csv(os.path.join(path_output, images_filename.replace('_MAX.tiff', '_spots.csv')), index=False)
@@ -152,10 +155,18 @@ if __name__ == "__main__":
         help="Threshold for spot detection",
     )
     parser.add_argument(
-        "-sts",
-        "--spot_threshold_size",
+        "-stsmin",
+        "--spot_threshold_size_min",
         type=float,
-        default=1.29,
+        default=1.2,
+        required=True,
+        help="For spot filtering, threshold on size",
+    )
+    parser.add_argument(
+        "-stsmax",
+        "--spot_threshold_size_max",
+        type=float,
+        default=1.6,
         required=True,
         help="For spot filtering, threshold on size",
     )
@@ -170,5 +181,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(image_path=args.input, mask_image_path=args.input_segmentation_image, path_output=args.path_output,
-         spotdiameter=args.spot_diameter, threshold=args.spot_threshold, spot_threshold_size=args.spot_threshold_size,
+         spotdiameter=args.spot_diameter, threshold=args.spot_threshold,
+         spot_threshold_size_min=args.spot_threshold_size_min, spot_threshold_size_max=args.spot_threshold_size_max,
          spot_threshold_mass=args.spot_threshold_mass)
