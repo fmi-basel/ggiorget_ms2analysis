@@ -12,6 +12,8 @@ In short, the workflow performs following steps:
 3. Spot linking
 4. Spot intensity read-out
 
+For installation of the workflow, please follow the instructions in the [config](config/README.md).
+
 Author:
 Jana Tünnermann
 
