@@ -155,4 +155,3 @@ dependencies:
   - zstd=1.5.5=hfc55251_0
   - pip:
       - argparse==1.4.0
-prefix: /tungstenfs/scratch/ggiorget/Jana/software/mamba/envs/ms2pipeline
