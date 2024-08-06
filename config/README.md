@@ -27,7 +27,7 @@ The configuration file should contain the following entries:
 - spotdetection_threshold: threshold for spot detection
 - spotfilter_size_min: minimum size of the spot for filtering after spot detection
 - spotfilter_size_max: maximum size of the spot for filtering after spot detection
-- spotfilter_mass: maximum mass of the spot for filtering after spot detection
+- spotfilter_mass: maximum mass of the spot for filtering after spot [ms2pipeline.yml](..%2F..%2F..%2FDownloads%2Fggiorget_ms2analysis-main%2Fworkflow%2Fenvs%2Fms2pipeline.yml)detection
 - min_burstlength: filter on the minimum length of a transcriptional on time
 
 An example is provided in the config folder (example_config.yaml). If you rename the configuration file, make sure to adjust the name in the Snakefile.
