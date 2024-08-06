@@ -8,7 +8,7 @@ import seaborn as sns
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 # Load data
-path = '/Volumes/ggiorget_scratch/Jana/transcrip_dynamic/E10_Mobi/live_imaging/benchmarking/spotdetection/trackpy/comparison'
+path = '/Volumes/ggiorget_scratch/Jana/transcrip_dynamic/E10_Mobi/live_imaging/benchmarking/spotdetection/trackpy/trackpy/comparison'
 # trackpy data
 filenames = glob(os.path.join(path, '*-sweep.csv'))
 
@@ -20,6 +20,7 @@ for filename in filenames:
 df = pd.concat(df)
 df['clone'] = df['filename'].str.rsplit(pat='_', n=-1, expand=True)[3]
 
+#df = df[df['frame'] >= 120]
 df = df[df['frame']<=600]
 # Calculate precision, recall and f1 score
 def calculate_scores(dataframe):
@@ -32,6 +33,7 @@ def calculate_scores(dataframe):
 df_results = df.groupby(['threshold', 'spotdiameter', 'spot_size_max', 'spot_size_min']).apply(calculate_scores)
 df_results = pd.DataFrame(df_results.tolist(), index=df_results.index,
                           columns=['f1', 'recall', 'precision']).reset_index()
+df_results.to_csv(os.path.join('/Users/janatunnermann/Desktop', 'results_600_filtered.csv'), index=False)
 
 spotdiameter = df['spotdiameter'].unique()
 
@@ -186,3 +188,32 @@ plt.tight_layout()
 plt.show()
 # plt.savefig(os.path.join(path.replace('comparison', 'plots'), 'precision_frame.pdf'))
 plt.close()
+
+# Plot TP, FP and FN over time for selected condition
+# Calculate TP, FP and FN
+df['TP']= 0
+df.loc[(df['groundtruth'] == 1) & (df['spot_detected'] == 1), 'TP'] = 1
+df['FP']= 0
+df.loc[(df['groundtruth'] == 0) & (df['spot_detected'] == 1), 'FP'] = 1
+df['FN']= 0
+df.loc[(df['groundtruth'] == 1) & (df['spot_detected'] == 0), 'FN'] = 1
+
+#select condition
+spotdiameter = 7
+threshold = 4600
+spot_size_max = 1.65
+spot_size_min = 1.2
+
+df_condition = df[(df['spotdiameter'] == spotdiameter) & (df['threshold'] == threshold) & (df['spot_size_max'] == spot_size_max) & (df['spot_size_min'] == spot_size_min)]
+df_condition= df_condition.groupby('frame').sum().reset_index()
+
+#plot TP, FP and FN over frame
+fig, ax = plt.subplots()
+#ax.scatter(df_condition['frame'], df_condition['TP'], label='TP')
+#ax.scatter(df_condition['frame'], df_condition['FP'], label='FP')
+ax.scatter(df_condition['frame'], df_condition['FN'], label='FN')
+ax.set_ylabel('Count')
+ax.set_xlabel('Frame')
+ax.legend()
+plt.show()
+
