@@ -6,7 +6,7 @@ from glob import glob
 # Five clones
 dir = '/Volumes/ggiorget_scratch/Jana/transcrip_dynamic/E10_Mobi/live_imaging/data/processed'
 folder = [
-    '20230714',
+    '20230718',
     '20230715',
     '20230716',
     '20230717',
