@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-configfile: "config/config_fiveclones.yml"
+configfile: "config/config_example.yml"
 
 # file containing the list of movies to process
 dataset_list = config['movies_list']
