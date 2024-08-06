@@ -1,17 +1,19 @@
-# Snakemake workflow: `<name>`
+# Snakemake workflow: 'Using Live-cell Imaging to investigate Enhancer-driven Transcriptional Dynamics'
 
 [![Snakemake](https://img.shields.io/badge/snakemake-≥6.3.0-brightgreen.svg)](https://snakemake.github.io)
 [![GitHub actions status](https://github.com/<owner>/<repo>/workflows/Tests/badge.svg?branch=main)](https://github.com/<owner>/<repo>/actions?query=branch%3Amain+workflow%3ATests)
 
 
-A Snakemake workflow for `<description>`
+A Snakemake workflow for live-cell image analysis workflow as decribed in detail in <citation>
 
+In short, the workflow performs following steps:
+1. Cell segmentation using stardist and tracking of cells
+2. Spot detection and filtering
+3. Spot linking
+4. Spot intensity read-out
 
-## Usage
-
-The usage of this workflow is described in the [Snakemake Workflow Catalog](https://snakemake.github.io/snakemake-workflow-catalog/?usage=<owner>%2F<repo>).
-
-If you use this workflow in a paper, don't forget to give credits to the authors by citing the URL of this (original) <repo>sitory and its DOI (see above).
+Author:
+Jana Tünnermann
 
 # TODO
 
