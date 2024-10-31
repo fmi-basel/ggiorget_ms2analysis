@@ -3,3 +3,8 @@ resources/**
 logs/**
 .snakemake
 .snakemake/**
+/workflow/scratchpad/Plotting/paperplots/Kaplan_Meier_Estimator.py
+/workflow/scratchpad/Plotting/paperplots/Paper_plots.py
+/workflow/scratchpad/Plotting/paperplots/paper_plots_Gregory.py
+/workflow/scratchpad/Plotting/paperplots/Plot_PsudoOverlay_ts-startstop.py
+/workflow/scratchpad/Plotting/paperplots/Plotting_examples_intensitytraces.py
