@@ -15,6 +15,10 @@ mamba install -c conda-forge -c bioconda snakemake=8.4.12
 All other package dependencies are handles directly by Snakemake.
 
 # Usage
+## Pre-processing before using snakemake
+The snakemake workflow processes max- and mean-projections (xyt) from time-resolved 3D-stacks (xyzt). Before running the snakemake workflow, these projection files can be generates with scripts provided in the folder [scripts](scripts/s00_preprocessing/).  
+
+## Snakemake workflow
 To run the workflow, you need to provide a configuration file and a text file listing the samples to be processed.
 
 The text file should contain the sample names (one per line), end with the extension '_dataset_list.txt', and be located in the data folder. An example is given.
